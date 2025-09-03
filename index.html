@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Orçamento</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #121212;
+      padding: 20px;
+    }
+
+    .container {
+        background: #1e1e1e;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        color: #fff;
+        transform: scale(0.95);
+        animation: zoomIn 0.6s ease forwards;
+        box-sizing: border-box;
+    }
+
+    @keyframes zoomIn {
+      to { transform: scale(1); }
+    }
+
+    /* Responsividade extra */
+    @media (max-width: 480px) {
+        .container {
+        padding: 20px;
+        }
+
+        input, button, label {
+        width: 100%;
+        }
+
+        .logo {
+        width: 90px;
+        }
+
+        h2 {
+        font-size: 18px;
+        }
+    }
+
+    .logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 15px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #F0442C;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      margin-top: 15px;
+      font-weight: 600;
+      color: #F0442C;
+      text-align: left;
+      width: 90%;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #2a2a2a;
+      color: #fff;
+      transition: all 0.3s ease;
+      display: block;
+    }
+
+    input::placeholder {
+      color: #888;
+    }
+
+    input:focus {
+      border-color: #F0442C;
+      box-shadow: 0 0 8px rgba(255,123,0,0.5);
+      outline: none;
+    }
+
+    button {
+        margin-top: 20px;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #F0442C, #ff6b47);
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s ease, background 0.3s ease;
+    }
+
+    button:hover {
+        background: linear-gradient(135deg, #d63c25, #ff5733);
+        transform: scale(1.05);
+    }
+
+    /* === POPUP === */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup {
+      background: #1e1e1e;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      text-align: center;
+      max-width: 350px;
+      width: 90%;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .popup p {
+      margin: 8px 0;
+      font-size: 15px;
+      color: #f1f1f1;
+    }
+
+    .popup b {
+      color: #d63c25;
+    }
+
+    .close-btn {
+      margin-top: 15px;
+      background: #F0442C;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: #d63c25;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="Logo da Empresa" class="logo">
+    <h2>💰 Calculadora de Orçamento</h2>
+
+    <form id="calcForm">
+      <label>Valor Total do Orçamento</label>
+      <input type="number" id="equip" required min="0" step="0.01" placeholder="Ex: 10000">
+
+      <label>Entrada no PIX</label>
+      <input type="number" id="entrada" required min="0" step="0.01" placeholder="Ex: 3000">
+
+      <label>Desconto PIX (%)</label>
+      <input type="number" id="pix" required min="0" step="0.01" placeholder="Ex: 5">
+
+      <label>Desconto Cartão (%)</label>
+      <input type="number" id="cartao" required min="0" step="0.01" placeholder="Ex: 2">
+
+      <label>Frete</label>
+      <input type="number" id="frete" required min="0" step="0.01" placeholder="Ex: 200">
+
+      <button type="submit">Calcular</button>
+    </form>
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup-overlay" id="popup">
+    <div class="popup">
+      <p><b>Desconto da entrada (Y):</b> <span id="y"></span></p>
+      <p><b>Saldo no cartão (Z):</b> <span id="z"></span></p>
+      <p><b>Total do orçamento:</b> <span id="total"></span></p>
+      <button class="close-btn" onclick="fecharPopup()">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    const popup = document.getElementById("popup");
+
+    document.getElementById("calcForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      let E = parseFloat(document.getElementById("equip").value);
+      let X = parseFloat(document.getElementById("entrada").value);
+      let p = parseFloat(document.getElementById("pix").value) / 100;
+      let c = parseFloat(document.getElementById("cartao").value) / 100;
+      let F = parseFloat(document.getElementById("frete").value);
+
+      let Y = X * p;
+      let Base = E - X - Y;
+      let Z = Base * (1 - c) + F;
+      let Total = X + Z;
+
+      document.getElementById("y").textContent = Y.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      document.getElementById("z").textContent = Z.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      document.getElementById("total").textContent = Total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      popup.style.display = "flex"; // mostra o popup
+    });
+
+    function fecharPopup() {
+      popup.style.display = "none";
+    }
+  </script>
+</body>
+</html>
